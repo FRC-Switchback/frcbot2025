@@ -1,0 +1,21 @@
+[
+  {
+    "type": "java",
+    "name": "jar (in project frcbot2025)",
+    "extensions": [
+      {
+        "name": "Sim GUI",
+        "libName": "/Users/chimaokafor/Documents/GitHub/frcbot2025/build/jni/release/libhalsim_gui.dylib",
+        "defaultEnabled": true
+      },
+      {
+        "name": "Use Real DriverStation",
+        "libName": "/Users/chimaokafor/Documents/GitHub/frcbot2025/build/jni/release/libhalsim_ds_socket.dylib",
+        "defaultEnabled": false
+      }
+    ],
+    "environment": {},
+    "libraryDir": "/Users/chimaokafor/Documents/GitHub/frcbot2025/build/jni/release",
+    "mainClassName": "frc.robot.Main"
+  }
+]
