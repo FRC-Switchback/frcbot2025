@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.autos.DriveForwardAuto;
 import frc.robot.autos.SimpleCoralAuto;
@@ -16,7 +15,6 @@ import frc.robot.commands.ClimberDownCommand;
 import frc.robot.commands.ClimberUpCommand;
 import frc.robot.commands.CoralOutCommand;
 import frc.robot.commands.CoralStackCommand;
-import frc.robot.commands.DriveCommand;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
@@ -77,33 +75,6 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-
-    /** 
-     * Set the default command for the drive subsystem to an instance of the
-     * DriveCommand with the values provided by the joystick axes on the driver
-     * controller. The Y axis of the controller is inverted so that pushing the
-     * stick away from you (a negative value) drives the robot forwards (a positive
-     * value). Similarly for the X axis where we need to flip the value so the
-     * joystick matches the WPILib convention of counter-clockwise positive
-     */
-    m_drive.setDefaultCommand(new DriveCommand(m_drive,
-        () -> -m_driverController.getLeftY(),
-        () -> -m_driverController.getRightX(),
-        () -> true));
-
-    /**
-     * Holding the left bumper (or whatever button you assign) will multiply the speed
-     * by a decimal to limit the max speed of the robot -> 
-     * 1 (100%) from the controller * .9 = 90% of the max speed when held (we also square it)
-     * 
-     * Slow mode is very valuable for line ups and the deep climb 
-     * 
-     * When switching to single driver mode switch to the B button
-     */
-    m_driverController.leftBumper().whileTrue(new DriveCommand(m_drive, 
-        () -> -m_driverController.getLeftY() * DriveConstants.SLOW_MODE_MOVE,  
-        () -> -m_driverController.getRightX() * DriveConstants.SLOW_MODE_TURN,
-        () -> true));
 
     /**
      * Here we declare all of our operator commands, these commands could have been
