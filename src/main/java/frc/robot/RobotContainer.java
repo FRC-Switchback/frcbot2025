@@ -17,9 +17,13 @@ import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.RollerSubsystem;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -31,13 +35,10 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
 
-  // The robot's subsystems and commands are defined here...
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController =
+  private final CommandXboxController driverController =
       new CommandXboxController(OperatorConstants.DRIVER_CONTROLLER_PORT);
-  // You can remove this if you wish to have a single driver, note that you
-  // may have to change the binding for left bumper.
-  private final CommandXboxController m_operatorController = 
+  
+  private final CommandXboxController operatorController = 
       new CommandXboxController(OperatorConstants.OPERATOR_CONTROLLER_PORT);
 
   // The autonomous chooser
@@ -47,17 +48,30 @@ public class RobotContainer {
   public final ArmSubsystem m_arm = new ArmSubsystem();
   public final SwerveSubsystem m_drive = new SwerveSubsystem();
   public final ClimberSubsystem m_climber = new ClimberSubsystem();
+  public final SwerveSubsystem swerveDrive = new SwerveSubsystem();
 
   
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    // Set up command bixndings
+  
     configureBindings();
     // Set the options to show up in the Dashboard for selecting auto modes. If you
     // add additional auto modes you can add additional lines here with
     // autoChooser.addOption
     SmartDashboard.putData(m_chooser);
+
+    swerveDrive.setDefaultCommand(
+
+        new RunCommand(
+          () -> swerveDrive.drive(
+            -MathUtil.applyDeadband(driverController.getLeftX(), 0.05),      // second value is the deadband
+            -MathUtil.applyDeadband(driverController.getLeftY(), 0.05),
+            -MathUtil.applyDeadband(driverController.getRightX(), 0.05),
+            true
+          ),
+          swerveDrive));
   }
+
 
   /**
    * Use this method to define your trigger->command mappings. Triggers can be created via the
@@ -69,40 +83,51 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-
-    /**
-     * Here we declare all of our operator commands, these commands could have been
-     * written in a more compact manner but are left verbose so the intent is clear.
-     */
-    m_operatorController.rightBumper().whileTrue(new AlgieInCommand(m_roller));
-    
-    // Here we use a trigger as a button when it is pushed past a certain threshold
-    m_operatorController.rightTrigger(.2).whileTrue(new AlgieOutCommand(m_roller));
-
-    /**
-     * The arm will be passively held up or down after this is used,
-     * make sure not to run the arm too long or it may get upset!
-     */
-    m_operatorController.leftBumper().whileTrue(new ArmUpCommand(m_arm));
-    m_operatorController.leftTrigger(.2).whileTrue(new ArmDownCommand(m_arm));
-
-    /**
-     * Used to score coral, the stack command is for when there is already coral
-     * in L1 where you are trying to score. The numbers may need to be tuned, 
-     * make sure the rollers do not wear on the plastic basket.
-     */
-    m_operatorController.x().whileTrue(new CoralOutCommand(m_roller));
-    m_operatorController.y().whileTrue(new CoralStackCommand(m_roller));
-
-    /**
-     * POV is a direction on the D-Pad or directional arrow pad of the controller,
-     * the direction of this will be different depending on how your winch is wound
-     */
-    m_operatorController.pov(0).whileTrue(new ClimberUpCommand(m_climber));
-    m_operatorController.pov(180).whileTrue(new ClimberDownCommand(m_climber));
-  }
-
-  /**
+      JoystickButton(driverController, XboxController.Button.kLeftStick)
+              .whileTrue(new RunCommand(
+                  () -> swerveDrive.fullStop(),
+                  swerveDrive));
+      
+      
+          /**
+           * Here we declare all of our operator commands, these commands could have been
+           * written in a more compact manner but are left verbose so the intent is clear.
+           */
+          operatorController.rightBumper().whileTrue(new AlgieInCommand(m_roller));
+          
+          // Here we use a trigger as a button when it is pushed past a certain threshold
+          operatorController.rightTrigger(.2).whileTrue(new AlgieOutCommand(m_roller));
+      
+          /**
+           * The arm will be passively held up or down after this is used,
+           * make sure not to run the arm too long or it may get upset!
+           */
+          operatorController.leftBumper().whileTrue(new ArmUpCommand(m_arm));
+          operatorController.leftTrigger(.2).whileTrue(new ArmDownCommand(m_arm));
+      
+          /**
+           * Used to score coral, the stack command is for when there is already coral
+           * in L1 where you are trying to score. The numbers may need to be tuned, 
+           * make sure the rollers do not wear on the plastic basket.
+           */
+          operatorController.x().whileTrue(new CoralOutCommand(m_roller));
+          operatorController.y().whileTrue(new CoralStackCommand(m_roller));
+      
+          /**
+           * POV is a direction on the D-Pad or directional arrow pad of the controller,
+           * the direction of this will be different depending on how your winch is wound
+           */
+          operatorController.pov(0).whileTrue(new ClimberUpCommand(m_climber));
+          operatorController.pov(180).whileTrue(new ClimberDownCommand(m_climber));
+        }
+      
+        private Trigger JoystickButton(CommandXboxController driverController2, Button kleftstick) {
+          // TODO Auto-generated method stub
+          throw new UnsupportedOperationException("Unimplemented method 'JoystickButton'");
+        }
+      
+      
+        /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
    * @return the command to run in autonomous
