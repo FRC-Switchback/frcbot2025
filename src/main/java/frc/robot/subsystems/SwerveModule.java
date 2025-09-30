@@ -17,11 +17,10 @@ public class SwerveModule {
     
     // module constants
     private static final double wheelRadius = 0.0508;
-
+    private static final double driveGearRatio = 6.75;
     private static final double moduleMaxAngularVelocity = 27.7;        // estimations
     private static final double moduleMaxAngularAcceleration = 556.6;        // estimations
-    private static final double driveGearRatio = 6.75;
-    private static final double maxSpeed = 4.47; // meters per second, theoretical max speed
+
 
     // make each motor per module
     private final SparkMax driveMotor;
