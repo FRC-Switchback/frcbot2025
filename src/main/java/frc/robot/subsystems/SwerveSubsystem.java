@@ -14,6 +14,8 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.studica.frc.AHRS;
+import com.studica.frc.AHRS.NavXComType;
+import com.studica.frc.AHRS.NavXUpdateRate;
 
 public class SwerveSubsystem extends SubsystemBase {
 
@@ -35,7 +37,7 @@ public class SwerveSubsystem extends SubsystemBase {
   private final SwerveModule backLeftModule = new SwerveModule(5, 6, 2);
   private final SwerveModule backRightModule = new SwerveModule(7, 8, 3);
 
-  private final AHRS gyro = new AHRS(null, null);
+  private final AHRS gyro = new AHRS(NavXComType.kI2C, NavXUpdateRate.k200Hz);
 
   // set up swerve kinematics
   private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(
@@ -112,6 +114,7 @@ public class SwerveSubsystem extends SubsystemBase {
     backRightModule.setDesiredState(moduleStates[3]);
   }
 
+    // inteded to fully stop movement, not on a controller
   public void fullStop() {
     frontLeftModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
     frontRightModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));

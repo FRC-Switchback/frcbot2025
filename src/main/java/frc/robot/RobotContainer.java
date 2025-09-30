@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
@@ -46,7 +47,7 @@ public class RobotContainer {
 
   public final RollerSubsystem m_roller = new RollerSubsystem();
   public final ArmSubsystem m_arm = new ArmSubsystem();
-  public final SwerveSubsystem m_drive = new SwerveSubsystem();
+
   public final ClimberSubsystem m_climber = new ClimberSubsystem();
   public final SwerveSubsystem swerveDrive = new SwerveSubsystem();
 
@@ -83,11 +84,6 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-      JoystickButton(driverController, XboxController.Button.kLeftStick)
-              .whileTrue(new RunCommand(
-                  () -> swerveDrive.fullStop(),
-                  swerveDrive));
-      
       
           /**
            * Here we declare all of our operator commands, these commands could have been
@@ -119,11 +115,6 @@ public class RobotContainer {
            */
           operatorController.pov(0).whileTrue(new ClimberUpCommand(m_climber));
           operatorController.pov(180).whileTrue(new ClimberDownCommand(m_climber));
-        }
-      
-        private Trigger JoystickButton(CommandXboxController driverController2, Button kleftstick) {
-          // TODO Auto-generated method stub
-          throw new UnsupportedOperationException("Unimplemented method 'JoystickButton'");
         }
       
       

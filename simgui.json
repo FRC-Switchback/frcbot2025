@@ -1,4 +1,38 @@
 {
+  "HALProvider": {
+    "Other Devices": {
+      "AnalogEncoder[0]": {
+        "header": {
+          "open": true
+        }
+      },
+      "AnalogEncoder[3]": {
+        "header": {
+          "open": true
+        }
+      },
+      "SPARK MAX [1] RELATIVE ENCODER": {
+        "header": {
+          "open": true
+        }
+      },
+      "SPARK MAX [3] RELATIVE ENCODER": {
+        "header": {
+          "open": true
+        }
+      },
+      "SPARK MAX [5] RELATIVE ENCODER": {
+        "header": {
+          "open": true
+        }
+      },
+      "SPARK MAX [7] RELATIVE ENCODER": {
+        "header": {
+          "open": true
+        }
+      }
+    }
+  },
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
