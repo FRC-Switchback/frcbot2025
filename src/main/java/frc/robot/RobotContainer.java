@@ -5,50 +5,159 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.Autos;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.VariableAutos.BranchSide;
+import frc.robot.subsystems.SwerveSubsystem;
+
+import java.io.File;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathPlannerPath;
+
+import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+  SwerveSubsystem swerver;
+  PathPlannerPath path;
+  AutoAlign alignmentCommandFactory;
+  Trigger robotOriented;
+  Trigger hasCoral;
+  Trigger endGame;
 
+  private Field2d m_field = new Field2d();
   // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController =
-      new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  private final CommandXboxController m_driverController = new CommandXboxController(
+      OperatorConstants.kDriverControllerPort);
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  private final CommandXboxController m_operatorController = new CommandXboxController(1);
+
+  public final SendableChooser<Command> m_autoChooser = new SendableChooser<>();
+
+  /**
+   * The container for the robot. Contains subsystems, OI devices, and commands.
+   */
   public RobotContainer() {
+    swerver = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
+    // Load path
+    loadPaths();
+    robotOriented = new Trigger(() -> swerver.getDriveMode());
+    endGame = new Trigger(() -> DriverStation.getMatchTime() < 20.0);
+    SmartDashboard.putData("Field", m_field);
+
+    m_autoChooser.setDefaultOption("Leave", AutoBuilder.buildAuto("Start2-Leave"));
+    m_autoChooser.addOption("Left 3 Coral", AutoBuilder.buildAuto("Start1-test"));
+    m_autoChooser.addOption("Right 3 Coral", AutoBuilder.buildAuto("Start3-test"));
+    m_autoChooser.addOption("Barge Wall 3 Coral", AutoBuilder.buildAuto("Start0-test"));
+    m_autoChooser.addOption("Processor Wall 3 Coral", AutoBuilder.buildAuto("Start5-test"));
+    m_autoChooser.addOption("straight 1 coral", AutoBuilder.buildAuto("Start2-score"));
+    m_autoChooser.addOption("scorel4-test", AutoBuilder.buildAuto("L4Score-test"));
+    m_autoChooser.addOption("Straight", AutoBuilder.buildAuto("Straight"));
+    m_autoChooser.addOption("none", Commands.waitSeconds(0));
+    m_autoChooser.addOption("testtests", AutoBuilder.buildAuto("Test"));
+    m_autoChooser.addOption("middle with algae", AutoBuilder.buildAuto("Algae"));
+    SmartDashboard.putData("chooser", m_autoChooser);
+
+    alignmentCommandFactory = new AutoAlign(swerver);
     // Configure the trigger bindings
     configureBindings();
+    DriverStation.silenceJoystickConnectionWarning(true);
   }
 
   /**
-   * Use this method to define your trigger->command mappings. Triggers can be created via the
-   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
+   * Use this method to define your trigger->command mappings. Triggers can be
+   * created via the
+   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with
+   * an arbitrary
    * predicate, or via the named factories in {@link
-   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-   * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-   * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
+   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for
+   * {@link
+   * CommandXboxController
+   * Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
+   * PS4} controllers or
+   * {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
    * joysticks}.
    */
   private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    new Trigger(m_exampleSubsystem::exampleCondition)
-        .onTrue(new ExampleCommand(m_exampleSubsystem));
 
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
-    m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+    if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+      robotOriented.whileTrue(Commands.run(() -> swerver.driveRobotOriented(
+        () -> -MathUtil.applyDeadband(m_driverController.getLeftY(), .1),
+        () -> -MathUtil.applyDeadband(m_driverController.getLeftX(), .1),
+        () -> -.9 * MathUtil.applyDeadband(m_driverController.getRightX(), .15)), swerver))
+        .whileFalse(Commands.run(() -> swerver.drive(
+          () -> MathUtil.applyDeadband(m_driverController.getLeftY(), .1),
+          () -> MathUtil.applyDeadband(m_driverController.getLeftX(), .1),
+          () -> -.9 * MathUtil.applyDeadband(m_driverController.getRightX(), .15)), swerver));
+      
+      swerver.setDefaultCommand(Commands.run(() -> swerver.drive(
+        () -> MathUtil.applyDeadband(m_driverController.getLeftY(), .1),
+        () -> MathUtil.applyDeadband(m_driverController.getLeftX(), .1),
+        () -> -.9 * MathUtil.applyDeadband(m_driverController.getRightX(), .15)), swerver));
+    } else {
+      robotOriented.whileTrue(Commands.run(() -> swerver.driveRobotOriented(
+        () -> -MathUtil.applyDeadband(m_driverController.getLeftY(), .1),
+        () -> -MathUtil.applyDeadband(m_driverController.getLeftX(), .1),
+        () -> -.9 * MathUtil.applyDeadband(m_driverController.getRightX(), .15)), swerver))
+        .whileFalse(Commands.run(() -> swerver.drive(
+          () -> -MathUtil.applyDeadband(m_driverController.getLeftY(), .1),
+          () -> -MathUtil.applyDeadband(m_driverController.getLeftX(), .1),
+          () -> -.9 * MathUtil.applyDeadband(m_driverController.getRightX(), .15)), swerver));
+
+          swerver.setDefaultCommand(Commands.run(() -> swerver.drive(
+            () -> -MathUtil.applyDeadband(m_driverController.getLeftY(), .1),
+            () -> -MathUtil.applyDeadband(m_driverController.getLeftX(), .1),
+            () -> -.9 * MathUtil.applyDeadband(m_driverController.getRightX(), .15)), swerver));
+    }
+
+    m_driverController.rightBumper().onTrue(Commands.runOnce(() -> swerver.toggleDriveMode(), swerver));
+    m_driverController.a().onTrue(Commands.runOnce(() -> swerver.zeroGyro()));
+
+    // m_driverController.y().whileTrue(AutoBuilder.followPath(path));
+
+    m_driverController.x().whileTrue(alignmentCommandFactory.generateCommand(BranchSide.LEFT));
+    m_driverController.b().whileTrue(alignmentCommandFactory.generateCommand(BranchSide.RIGHT));
+    m_driverController.y().whileTrue(alignmentCommandFactory.generateCommand(BranchSide.CENTER));
+
+  
+
+    // m_operatorController.leftBumper().whileTrue(Commands.run(() ->
+    // climber.setClimberVoltage(-6), climber)).onFalse(Commands.runOnce(() ->
+    // climber.setClimberVoltage(0), climber));
+
+    m_driverController.povDown().whileTrue(swerver.sysIdDriveMotorCommand());
+  }
+
+  private void loadPaths() {
+    try {
+      path = PathPlannerPath.fromPathFile("Example Path");
+    } catch (Exception e) {
+      DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
+    }
   }
 
   /**
@@ -58,6 +167,6 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    return m_autoChooser.getSelected();
   }
 }

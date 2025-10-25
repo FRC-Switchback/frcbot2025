@@ -4,9 +4,13 @@
 
 package frc.robot;
 
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import au.grapplerobotics.CanBridge;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -25,6 +29,9 @@ public class Robot extends TimedRobot {
   public Robot() {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
+    CameraServer.startAutomaticCapture();
+    CanBridge.runTCP();
+    Timer.delay(10);
     m_robotContainer = new RobotContainer();
   }
 
@@ -41,6 +48,7 @@ public class Robot extends TimedRobot {
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
+    
     CommandScheduler.getInstance().run();
   }
 
