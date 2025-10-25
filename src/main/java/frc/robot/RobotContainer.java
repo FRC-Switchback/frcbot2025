@@ -30,6 +30,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.ClimberDownCommand;
+import frc.robot.commands.ClimberUpCommand;
+import frc.robot.subsystems.ClimberSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -49,6 +52,8 @@ public class RobotContainer {
   Trigger hasCoral;
   Trigger endGame;
 
+  public final ClimberSubsystem m_climber = new ClimberSubsystem();
+
   private Field2d m_field = new Field2d();
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController = new CommandXboxController(
@@ -62,6 +67,9 @@ public class RobotContainer {
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    m_driverController.pov(0).whileTrue(new ClimberUpCommand(m_climber));
+    m_driverController.pov(180).whileTrue(new ClimberDownCommand(m_climber));
+
     swerver = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
     // Load path
     loadPaths();
